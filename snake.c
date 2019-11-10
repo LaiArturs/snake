@@ -25,6 +25,7 @@ void removeSnakeEndFromDisplay(snake_t snake, WINDOW *win);
 void drawSnake(snake_t snake, WINDOW *win);
 void advanceSnakeForward(snake_t *snake);
 snakeSection_t *returnTail(snake_t snake);
+char detectCollisions(snake_t snake);
 
 int main(void)
 {   
@@ -100,9 +101,18 @@ int main(void)
             mvwprintw( win, 2, 2, "%d:%d\t%d", food[0], food[1], score*10);
             foodDisplayed = 1;
         }
+        if (detectCollisions(gameSnake)) {
+            mvwprintw( win, 3, 2, "Game Over!");
+            wrefresh(win);
+            break;
+        }
 
         wrefresh(win);
     }
+    while (1)
+    {
+    }
+    
     return 0;
 }
 
@@ -201,6 +211,22 @@ snakeSection_t *returnTail(snake_t snake) {
         currentSection = currentSection->next;
     }
     return currentSection;    
+}
+
+char detectCollisions(snake_t snake) {
+    // Detect wall collisions
+    if (snake.head->y == 0 || snake.head->x == 0 || snake.head->y == LINES-3 || snake.head->x == COLS-3){
+        return 1;
+    }
+    // Detect self biting
+    snakeSection_t *currentSection = snake.head;
+    while (currentSection->next != NULL) {
+        currentSection = currentSection->next;
+        if(currentSection->x == snake.head->x && currentSection->y == snake.head->y) {
+            return 1;
+        }
+    }
+    return 0;    
 }
 
 
