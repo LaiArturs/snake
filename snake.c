@@ -27,6 +27,9 @@ void advanceSnakeForward(snake_t *snake);
 snakeSection_t *returnTail(snake_t snake);
 char detectCollisions(snake_t snake);
 
+int windowWidth;
+int windowHeight;
+
 int main(void)
 {   
     char newDirrection;
@@ -36,7 +39,9 @@ int main(void)
     snakeSection_t *currentSection;  // to iterate over snake
 
     initscr();  // initialize curses
-    WINDOW *win = newwin(LINES-2, COLS-2, 1, 1);
+    windowWidth = COLS;
+    windowHeight = LINES;
+    WINDOW *win = newwin(windowHeight-2, windowWidth-2, 1, 1);
     cbreak();  // return key immediately
     //noecho();  // dont print which key is pressed
     nodelay(win, TRUE);  // use non blocking for getch()
@@ -85,8 +90,8 @@ int main(void)
             char foodOnSnake = 0;
             do {
                 r = rand();
-                food[0] = (r % (LINES - 4)) + 1;
-                food[1] = (r % (COLS - 4)) + 1;
+                food[0] = (r % (windowHeight - 4)) + 1;
+                food[1] = (r % (windowWidth - 4)) + 1;
                 foodOnSnake = 0;
                 currentSection = gameSnake.head;
                 while (currentSection!=NULL) {
@@ -129,8 +134,8 @@ snake_t initializeSnake(void) {
     gameSnake.head = currentSection;
     
     for (int i = 0; i < 5; i++) {
-        currentSection->y = LINES/2;
-        currentSection->x = (COLS/2)-i;
+        currentSection->y = windowHeight/2;
+        currentSection->x = (windowWidth/2)-i;
         currentSection->next = NULL;
         gameSnake.length++;
         if (i != 5-1){
@@ -215,7 +220,7 @@ snakeSection_t *returnTail(snake_t snake) {
 
 char detectCollisions(snake_t snake) {
     // Detect wall collisions
-    if (snake.head->y == 0 || snake.head->x == 0 || snake.head->y == LINES-3 || snake.head->x == COLS-3){
+    if (snake.head->y == 0 || snake.head->x == 0 || snake.head->y == windowHeight-3 || snake.head->x == windowWidth-3){
         return 1;
     }
     // Detect self biting
