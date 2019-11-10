@@ -103,17 +103,21 @@ int main(void)
                 }    
             } while (foodOnSnake);
             mvwaddch(win, food[0], food[1], '*');
-            mvwprintw( win, 2, 2, "%d:%d\t%d", food[0], food[1], score*10);
             foodDisplayed = 1;
         }
         if (detectCollisions(gameSnake)) {
-            mvwprintw( win, 3, 2, "Game Over!");
             wrefresh(win);
             break;
         }
 
         wrefresh(win);
     }
+
+    WINDOW *looseWindow = newwin(10, 20, (windowHeight-10)/2, (windowWidth-20)/2);
+    box(looseWindow, '|', ACS_HLINE );
+    mvwprintw(looseWindow, 1, 5, "Game Over!");
+    mvwprintw(looseWindow, 3, 1, "Score: %d", score*10);
+    wrefresh(looseWindow);
     while (1)
     {
     }
