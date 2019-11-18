@@ -29,6 +29,7 @@ char detectCollisions(snake_t snake);
 
 char initNewGame(snake_t *gameSnake, WINDOW *win, unsigned int *score, char *foodDisplayed);
 char looseMenu(WINDOW *win, unsigned int score);
+char playSnake(snake_t *gameSnake, WINDOW *win, unsigned int *score, char *foodDisplayed);
 
 int windowWidth;
 int windowHeight;
@@ -36,11 +37,8 @@ int input;  // to read keyboard input
 
 int main(void)
 {   
-    char newDirrection;
     char foodDisplayed = 0;  // 0 - not displayed, 1 - is displayed
-    unsigned int food[2];
     unsigned int score = 0;
-    snakeSection_t *currentSection;  // to iterate over snake
     
 
     /*      gameControl
@@ -73,83 +71,30 @@ int main(void)
     drawSnake(gameSnake, win);
 
     wrefresh(win);
+
+    // Main Game loop
     while (1)
     {
 
         switch (gameControl) {
         
-        // Initialize new game
-        case 'i':
-            gameControl = initNewGame(&gameSnake, win, &score, &foodDisplayed);
-            break;
-        
-        // Play/continue snake game
-        case 'g':
-            while (1) {
-                usleep(100000);
-                // check if food eaten
-                if (foodDisplayed) {
-                    if (gameSnake.head->y == food[0] && gameSnake.head->x == food[1]) {
-                        foodDisplayed = 0;
-                        gameSnake.length++;
-                        score++;
-                    }
-                }
-                // remove last bit of snake
-                removeSnakeEndFromDisplay(gameSnake, win);
-                
-                // Get dirrection from user
-                newDirrection = getDirection(gameSnake.direction, win);
-                if (newDirrection != 0) {
-                    gameSnake.direction = newDirrection;
-                }
-                
-                // move snake head forward
-                advanceSnakeForward(&gameSnake);
-                mvwaddch(win, gameSnake.head->y, gameSnake.head->x, '&'); //head
-                mvwaddch(win, gameSnake.head->next->y, gameSnake.head->next->x, '@'); //first part of neck
-                snakeSection_t *tail = returnTail(gameSnake);
-                // calculate food location
-                if (!foodDisplayed) {
-                    unsigned int r;
-                    srand ( time(NULL) );
-                    char foodOnSnake = 0;
-                    do {
-                        r = rand();
-                        food[0] = (r % (windowHeight - 4)) + 1;
-                        food[1] = (r % (windowWidth - 4)) + 1;
-                        foodOnSnake = 0;
-                        currentSection = gameSnake.head;
-                        while (currentSection!=NULL) {
-                            if (currentSection->y == food[0] && currentSection->x == food[1]) {
-                                foodOnSnake = 1;
-                                break;
-                            }
-                            currentSection = currentSection->next;
-                        }    
-                    } while (foodOnSnake);
-                    mvwaddch(win, food[0], food[1], '*');
-                    foodDisplayed = 1;
-                }
-                if (detectCollisions(gameSnake)) {
-                    wrefresh(win);
-                    gameControl = 'l';
-                    break;
-                }
+            // Initialize new game
+            case 'i':
+                gameControl = initNewGame(&gameSnake, win, &score, &foodDisplayed);
+                break;
+            
+            // Play/continue snake game
+            case 'g':
+                gameControl = playSnake(&gameSnake, win, &score, &foodDisplayed);
+                break;
 
-                wrefresh(win);
-            }
-            break;
+            // Loose game menu;
+            case 'l':
+                gameControl = looseMenu(looseWindow, score);
+                break;
 
-        // Loose game menu;
-        case 'l':
-            gameControl = looseMenu(looseWindow, score);
-            break;
-
-
-
-        default:
-            break;
+            default:
+                break;
         }
 
     }
@@ -343,3 +288,64 @@ char initNewGame(snake_t *gameSnake, WINDOW *win, unsigned int *score, char *foo
     return 'g';
 }
 
+char playSnake(snake_t *gameSnake, WINDOW *win, unsigned int *score, char *foodDisplayed) {
+    while (1) {
+        usleep(100000);
+        // check if food eaten
+        unsigned int food[2];
+        if (*foodDisplayed) {
+            if (gameSnake->head->y == food[0] && gameSnake->head->x == food[1]) {
+                *foodDisplayed = 0;
+                gameSnake->length++;
+                *score += 1;
+            }
+        }
+        // remove last bit of snake
+        removeSnakeEndFromDisplay(*gameSnake, win);
+        
+        // Get dirrection from user
+        char newDirrection;
+        newDirrection = getDirection(gameSnake->direction, win);
+        if (newDirrection != 0) {
+            gameSnake->direction = newDirrection;
+        }
+        
+        // move snake head forward
+        advanceSnakeForward(gameSnake);
+        mvwaddch(win, gameSnake->head->y, gameSnake->head->x, '&'); //head
+        mvwaddch(win, gameSnake->head->next->y, gameSnake->head->next->x, '@'); //first part of neck
+        snakeSection_t *tail = returnTail(*gameSnake);
+        // calculate food location
+        snakeSection_t *currentSection;  // to iterate over snake
+        if (!*foodDisplayed) {
+            unsigned int r;
+            srand ( time(NULL) );
+            char foodOnSnake = 0;
+            do {
+                r = rand();
+                food[0] = (r % (windowHeight - 4)) + 1;
+                food[1] = (r % (windowWidth - 4)) + 1;
+                foodOnSnake = 0;
+                currentSection = gameSnake->head;
+                while (currentSection!=NULL) {
+                    if (currentSection->y == food[0] && currentSection->x == food[1]) {
+                        foodOnSnake = 1;
+                        break;
+                    }
+                    currentSection = currentSection->next;
+                }    
+            } while (foodOnSnake);
+            mvwaddch(win, food[0], food[1], '*');
+            *foodDisplayed = 1;
+        }
+
+        // Check if snake hits walls or itself
+        if (detectCollisions(*gameSnake)) {
+            wrefresh(win);
+            return 'l';
+            break;
+        }
+
+        wrefresh(win);
+    }
+}
