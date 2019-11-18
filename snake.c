@@ -317,18 +317,20 @@ char pauseMenu(WINDOW *win, unsigned int score) {
 char initNewGame(snake_t *gameSnake, WINDOW *win, unsigned int *score, food_t *food) {
     *score = 0;
     food->foodDisplayed = 0;
+    wclear(win);
     win = newwin(windowHeight-2, windowWidth-2, 1, 1);
     nodelay(win, TRUE);
     keypad(win, TRUE);
     curs_set(0);
-    box(win, '|', ACS_HLINE );
     *gameSnake = initializeSnake();
-    drawSnake(*gameSnake, win);
     wrefresh(win);
     return 'g';
 }
 
 char playSnake(snake_t *gameSnake, WINDOW *win, unsigned int *score, food_t *food) {
+    box(win, '|', ACS_HLINE );
+    drawSnake(*gameSnake, win);
+    wrefresh(win);
     while (1) {
         usleep(100000);
         // check if food eaten
