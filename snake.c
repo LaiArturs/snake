@@ -4,6 +4,8 @@
 #include <time.h>  // for time()
 
 #define START_LENGTH 5
+#define MIN_WINDOW_WIDTH 58
+#define MIN_WINDOW_HEIGHT 14
 
 char getDirection(char cd, WINDOW *win);
 
@@ -64,6 +66,14 @@ int main(void)
     initscr();  // initialize curses
     windowWidth = COLS;
     windowHeight = LINES;
+    if (windowHeight < MIN_WINDOW_HEIGHT || windowWidth < MIN_WINDOW_WIDTH) {
+        printf("Min window size is %ix%i. Please resize your terminal window!\n", MIN_WINDOW_WIDTH, MIN_WINDOW_HEIGHT);
+        delwin(stdscr);
+        endwin();
+        refresh();
+        return 1;
+    }
+
     WINDOW *win = newwin(windowHeight-2, windowWidth-2, 1, 1);
     WINDOW *looseWindow;
     cbreak();  // return key immediately
