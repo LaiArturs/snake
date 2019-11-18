@@ -37,6 +37,8 @@ char initNewGame(snake_t *gameSnake, WINDOW *win, unsigned int *score, food_t *f
 char looseMenu(WINDOW *win, unsigned int score);
 char playSnake(snake_t *gameSnake, WINDOW *win, unsigned int *score, food_t *food);
 char pauseMenu(WINDOW *win, unsigned int score);
+char mainMenu(WINDOW *win);
+char aboutMenu(WINDOW *win);
 
 int windowWidth;
 int windowHeight;
@@ -55,6 +57,7 @@ int main(void)
     *   l - lose menu;
     *   m - main menu;
     *   p - pause menu;
+    *   m - main menu
     */
     char gameControl = 'i';
 
@@ -101,9 +104,29 @@ int main(void)
                 gameControl = looseMenu(looseWindow, score);
                 break;
             
+            // Pause menu
             case 'p':
                 gameControl = pauseMenu(looseWindow, score);
                 break;
+            
+            // Main menu
+            case 'm':
+                gameControl = mainMenu(win);
+                break;
+            
+            // About
+            case 'a':
+                gameControl = aboutMenu(win);
+                break;
+
+            // Quit game
+            case 'q':
+                delwin(win);
+                delwin(looseWindow);
+                delwin(stdscr);
+                endwin();
+                refresh();
+                return 0;
 
             default:
                 break;
@@ -276,16 +299,18 @@ char looseMenu(WINDOW *win, unsigned int score){
     nodelay(win, TRUE);  // use non blocking for getch()
     keypad(win, TRUE);  // allow special keys
     box(win, '|', ACS_HLINE );
-    mvwprintw(win, 1, 5, "Game Over!");
+    mvwprintw(win, 1, 5, "GAME OVER!");
     mvwprintw(win, 3, 1, "Score: %d", score*10);
     mvwprintw(win, 5, 1, "Restart - Enter");
-    mvwprintw(win, 6, 1, "Main menu - ESC");
+    mvwprintw(win, 6, 1, "Main menu - q");
     wrefresh(win);
     while (1)
     {
         if ((input = wgetch(win)) != ERR) {
             if (input == 10) {
                 return 'i';
+            } else if (input == 'q') {
+                return 'm';
             }
         }
     }
@@ -296,11 +321,11 @@ char pauseMenu(WINDOW *win, unsigned int score) {
     nodelay(win, TRUE);  // use non blocking for getch()
     keypad(win, TRUE);  // allow special keys
     box(win, '|', ACS_HLINE );
-    mvwprintw(win, 1, 5, "Pause Menu");
+    mvwprintw(win, 1, 5, "PAUSE MENU");
     mvwprintw(win, 3, 1, "Score: %d", score*10);
     mvwprintw(win, 5, 1, "Return - Enter");
     mvwprintw(win, 6, 1, "Restart - Space");
-    mvwprintw(win, 7, 1, "Main menu - ESC");
+    mvwprintw(win, 7, 1, "Main menu - q");
     wrefresh(win);
     while (1)
     {
@@ -309,6 +334,53 @@ char pauseMenu(WINDOW *win, unsigned int score) {
                 return 'g';
             } else if (input == ' ') {
                 return 'i';
+            } else if (input == 'q') {
+                return 'm';
+            }
+        }
+    }
+}
+
+char mainMenu(WINDOW *win) {
+    wclear(win);
+    box(win, '|', ACS_HLINE );
+    mvwprintw(win, 2, (windowWidth/2)-5, "__SNAKE__");
+    mvwprintw(win, 3, (windowWidth/2)-5, "@@@@@@@&   *");
+    mvwprintw(win, 5, 5, "New game - Enter");
+    mvwprintw(win, 6, 5, "Quit - q");
+    mvwprintw(win, 7, 5, "About - a");
+    wrefresh(win);
+    while (1)
+    {
+        if ((input = wgetch(win)) != ERR) {
+            if (input == 10) {
+                return 'i';
+            } else if (input == 'q') {
+                return 'q';
+            } else if (input == 'a') {
+                return 'a';
+            }
+        }
+    }
+}
+
+char aboutMenu(WINDOW *win) {
+    wclear(win);
+    box(win, '|', ACS_HLINE );
+    mvwprintw(win, 2, (windowWidth/2)-5, "ABOUT");
+    mvwprintw(win, 4, 5, "This game is dedicated to my friend, APE.");
+    mvwprintw(win, 5, 5, "Even if you feel as chasing impossible goals,");
+    mvwprintw(win, 6, 5, "smashing your head against the wall and biting");
+    mvwprintw(win, 7, 5, "yourself, remember that you have another chance");
+    mvwprintw(win, 8, 5, "to be better for yourself.");
+    mvwprintw(win, 9, 45, "-Arturs");
+    mvwprintw(win, windowHeight-4, 5, "Quit - q");
+    wrefresh(win);
+    while (1)
+    {
+        if ((input = wgetch(win)) != ERR) {
+            if (input == 'q') {
+                return 'm';
             }
         }
     }
