@@ -305,7 +305,8 @@ char looseMenu(WINDOW *win, unsigned int score){
     mvwprintw(win, 6, 1, "Main menu - q");
     wrefresh(win);
     while (1)
-    {
+    {   
+        usleep(100000);
         if ((input = wgetch(win)) != ERR) {
             if (input == 10) {
                 return 'i';
@@ -328,7 +329,8 @@ char pauseMenu(WINDOW *win, unsigned int score) {
     mvwprintw(win, 7, 1, "Main menu - q");
     wrefresh(win);
     while (1)
-    {
+    {   
+        usleep(100000);
         if ((input = wgetch(win)) != ERR) {
             if (input == 10) {
                 return 'g';
@@ -351,7 +353,8 @@ char mainMenu(WINDOW *win) {
     mvwprintw(win, 7, 5, "About - a");
     wrefresh(win);
     while (1)
-    {
+    {   
+        usleep(100000);
         if ((input = wgetch(win)) != ERR) {
             if (input == 10) {
                 return 'i';
@@ -377,7 +380,8 @@ char aboutMenu(WINDOW *win) {
     mvwprintw(win, windowHeight-4, 5, "Quit - q");
     wrefresh(win);
     while (1)
-    {
+    {   
+        usleep(100000);
         if ((input = wgetch(win)) != ERR) {
             if (input == 'q') {
                 return 'm';
