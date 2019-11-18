@@ -27,8 +27,12 @@ void advanceSnakeForward(snake_t *snake);
 snakeSection_t *returnTail(snake_t snake);
 char detectCollisions(snake_t snake);
 
+char initNewGame(snake_t *gameSnake, WINDOW *win, unsigned int *score, char *foodDisplayed);
+char looseMenu(WINDOW *win, unsigned int score);
+
 int windowWidth;
 int windowHeight;
+int input;  // to read keyboard input
 
 int main(void)
 {   
@@ -37,13 +41,24 @@ int main(void)
     unsigned int food[2];
     unsigned int score = 0;
     snakeSection_t *currentSection;  // to iterate over snake
+    
+
+    /*      gameControl
+    *   This variable determines what game should do next
+    *   i - initialize new game;
+    *   g - play/continue game;
+    *   l - lose menu;
+    *   m - main menu;
+    */
+    char gameControl = 'i';
 
     initscr();  // initialize curses
     windowWidth = COLS;
     windowHeight = LINES;
     WINDOW *win = newwin(windowHeight-2, windowWidth-2, 1, 1);
+    WINDOW *looseWindow;
     cbreak();  // return key immediately
-    //noecho();  // dont print which key is pressed
+    noecho();  // dont print which key is pressed
     nodelay(win, TRUE);  // use non blocking for getch()
     keypad(win, TRUE);  // allow special keys
     curs_set(0);  // hide cursor
@@ -60,71 +75,87 @@ int main(void)
     wrefresh(win);
     while (1)
     {
-        usleep(100000);
-        // check if food eaten
-        if (foodDisplayed) {
-            if (gameSnake.head->y == food[0] && gameSnake.head->x == food[1]) {
-                foodDisplayed = 0;
-                gameSnake.length++;
-                score++;
-            }
-        }
-        // remove last bit of snake
-        removeSnakeEndFromDisplay(gameSnake, win);
+
+        switch (gameControl) {
         
-        // Get dirrection from user
-        newDirrection = getDirection(gameSnake.direction, win);
-        if (newDirrection != 0) {
-            gameSnake.direction = newDirrection;
-        }
+        // Initialize new game
+        case 'i':
+            gameControl = initNewGame(&gameSnake, win, &score, &foodDisplayed);
+            break;
         
-        // move snake head forward
-        advanceSnakeForward(&gameSnake);
-        mvwaddch(win, gameSnake.head->y, gameSnake.head->x, '&'); //head
-        mvwaddch(win, gameSnake.head->next->y, gameSnake.head->next->x, '@'); //first part of neck
-        snakeSection_t *tail = returnTail(gameSnake);
-        // calculate food location
-        if (!foodDisplayed) {
-            unsigned int r;
-            srand ( time(NULL) );
-            char foodOnSnake = 0;
-            do {
-                r = rand();
-                food[0] = (r % (windowHeight - 4)) + 1;
-                food[1] = (r % (windowWidth - 4)) + 1;
-                foodOnSnake = 0;
-                currentSection = gameSnake.head;
-                while (currentSection!=NULL) {
-                    if (currentSection->y == food[0] && currentSection->x == food[1]) {
-                        foodOnSnake = 1;
-                        break;
+        // Play/continue snake game
+        case 'g':
+            while (1) {
+                usleep(100000);
+                // check if food eaten
+                if (foodDisplayed) {
+                    if (gameSnake.head->y == food[0] && gameSnake.head->x == food[1]) {
+                        foodDisplayed = 0;
+                        gameSnake.length++;
+                        score++;
                     }
-                    currentSection = currentSection->next;
-                }    
-            } while (foodOnSnake);
-            mvwaddch(win, food[0], food[1], '*');
-            foodDisplayed = 1;
-        }
-        if (detectCollisions(gameSnake)) {
-            wrefresh(win);
+                }
+                // remove last bit of snake
+                removeSnakeEndFromDisplay(gameSnake, win);
+                
+                // Get dirrection from user
+                newDirrection = getDirection(gameSnake.direction, win);
+                if (newDirrection != 0) {
+                    gameSnake.direction = newDirrection;
+                }
+                
+                // move snake head forward
+                advanceSnakeForward(&gameSnake);
+                mvwaddch(win, gameSnake.head->y, gameSnake.head->x, '&'); //head
+                mvwaddch(win, gameSnake.head->next->y, gameSnake.head->next->x, '@'); //first part of neck
+                snakeSection_t *tail = returnTail(gameSnake);
+                // calculate food location
+                if (!foodDisplayed) {
+                    unsigned int r;
+                    srand ( time(NULL) );
+                    char foodOnSnake = 0;
+                    do {
+                        r = rand();
+                        food[0] = (r % (windowHeight - 4)) + 1;
+                        food[1] = (r % (windowWidth - 4)) + 1;
+                        foodOnSnake = 0;
+                        currentSection = gameSnake.head;
+                        while (currentSection!=NULL) {
+                            if (currentSection->y == food[0] && currentSection->x == food[1]) {
+                                foodOnSnake = 1;
+                                break;
+                            }
+                            currentSection = currentSection->next;
+                        }    
+                    } while (foodOnSnake);
+                    mvwaddch(win, food[0], food[1], '*');
+                    foodDisplayed = 1;
+                }
+                if (detectCollisions(gameSnake)) {
+                    wrefresh(win);
+                    gameControl = 'l';
+                    break;
+                }
+
+                wrefresh(win);
+            }
+            break;
+
+        // Loose game menu;
+        case 'l':
+            gameControl = looseMenu(looseWindow, score);
+            break;
+
+
+
+        default:
             break;
         }
 
-        wrefresh(win);
-    }
-
-    WINDOW *looseWindow = newwin(10, 20, (windowHeight-10)/2, (windowWidth-20)/2);
-    box(looseWindow, '|', ACS_HLINE );
-    mvwprintw(looseWindow, 1, 5, "Game Over!");
-    mvwprintw(looseWindow, 3, 1, "Score: %d", score*10);
-    wrefresh(looseWindow);
-    while (1)
-    {
     }
     
     return 0;
 }
-
 snake_t initializeSnake(void) {
     snake_t gameSnake;
     gameSnake.length = 0;
@@ -278,3 +309,37 @@ char getDirection(char cd, WINDOW *win) {
     
     
 }
+char looseMenu(WINDOW *win, unsigned int score){
+    win = newwin(10, 20, (windowHeight-10)/2, (windowWidth-20)/2);
+    nodelay(win, TRUE);  // use non blocking for getch()
+    keypad(win, TRUE);  // allow special keys
+    box(win, '|', ACS_HLINE );
+    mvwprintw(win, 1, 5, "Game Over!");
+    mvwprintw(win, 3, 1, "Score: %d", score*10);
+    mvwprintw(win, 5, 1, "Restart - Enter");
+    mvwprintw(win, 6, 1, "Main menu - ESC");
+    wrefresh(win);
+    while (1)
+    {
+        if ((input = wgetch(win)) != ERR) {
+            if (input == 10) {
+                return 'i';
+            }
+        }
+    }
+}
+
+char initNewGame(snake_t *gameSnake, WINDOW *win, unsigned int *score, char *foodDisplayed) {
+    *score = 0;
+    *foodDisplayed = 0;
+    win = newwin(windowHeight-2, windowWidth-2, 1, 1);
+    nodelay(win, TRUE);
+    keypad(win, TRUE);
+    curs_set(0);
+    box(win, '|', ACS_HLINE );
+    *gameSnake = initializeSnake();
+    drawSnake(*gameSnake, win);
+    wrefresh(win);
+    return 'g';
+}
+
