@@ -8,3 +8,6 @@ Use following command to build:
 ```
 gcc -lncurses snake.c -o snake
 ```
+
+## Issues
+1. Does not build on Windows
